@@ -1,8 +1,8 @@
 import { reactive } from "vue";
 
 export const settings = reactive({
-    ignoreCache: false,
-    enable_services: false,
+    ignoreCache: true,
+    enable_services: true,
     enable_qemu_controls: true,
     qemu_vms: [
         {

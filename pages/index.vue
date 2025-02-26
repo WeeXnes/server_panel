@@ -5,7 +5,7 @@ import axios from 'axios';
 import type {networkInterface} from "~/types/networkInterface";
 import type {serviceInterface} from "~/types/serviceInterface";
 
-const { data: virtualMachines } = await useAsyncData<VM[]>('vms', () => $fetch('/api/getVMs'));
+
 
 const ignoreCache = true;
 
@@ -18,7 +18,7 @@ const startVm = async (vm: any) => {
     });
     console.log(response.data);
     if(response.data.status == 'success') {
-      virtualMachines.value?.forEach(vm_list => {
+      vmInfo.vms.forEach(vm_list => {
         if(vm.name == vm_list.name) {
           vm_list.state = "on";
         }
@@ -37,7 +37,7 @@ const shutdownVm = async (vm: any) => {
     });
     console.log(response.data);
     if(response.data.status == 'success') {
-      virtualMachines.value?.forEach(vm_list => {
+      vmInfo.vms.forEach(vm_list => {
         if(vm.name == vm_list.name) {
           vm_list.state = "off";
         }
@@ -49,6 +49,16 @@ const shutdownVm = async (vm: any) => {
 };
 
 
+const settings = reactive({
+  ignoreCache: false,
+  enable_services: false,
+  enable_qemu_controls: false,
+});
+
+const vmInfo = reactive({
+  isLoaded: false,
+  vms: [] as VM[],
+})
 
 const osInfo = reactive({
   isLoaded: false,
@@ -144,7 +154,7 @@ const fetchMemoryInfo = async () => {
   try{
     let memoryInfoFetch = await $fetch('/api/getMemory')
     console.log(memoryInfoFetch)
-    let ram_cache = ignoreCache ? (memoryInfoFetch?.cached ?? 0) : 0;
+    let ram_cache = settings.ignoreCache ? (memoryInfoFetch?.cached ?? 0) : 0;
     if(memoryInfoFetch?.total != null)
       memoryInfo.total = Math.round( memoryInfoFetch?.total/ (1024 * 1024 * 1024)) || 0
     if(memoryInfoFetch?.free != null)
@@ -157,16 +167,44 @@ const fetchMemoryInfo = async () => {
   }
 }
 
+const fetchVMs = async () => {
+  try{
+    let vmInfoFetch = await $fetch('/api/getVMs')
+    console.log(vmInfoFetch)
+    vmInfoFetch?.forEach(vm => {
+      vmInfo.vms.push(vm)
+    })
+    vmInfo.isLoaded = true
+  }catch(error){
+    console.error(`Error fetchOsInfo: ${error}`);
+  }
+}
 
 
+
+const fetchSettings = async () => {
+  try {
+    let settingsFetch = await $fetch('/api/getSettings')
+    console.log(settingsFetch)
+    settings.ignoreCache = settingsFetch?.ignoreCache || false
+    settings.enable_qemu_controls = settingsFetch?.enable_qemu_controls || false
+    settings.enable_services = settingsFetch?.enable_services || false
+  } catch (error) {
+    console.error('Error fetching CPU temperature:', error);
+  }
+}
 
 onMounted(async () => {
+  await fetchSettings()
+
+  if(settings.enable_qemu_controls) await fetchVMs()
+
   await fetchOsInfo()
   await fetchCpuTemp()
   cpuInfo.isLoaded = true
   await fetchMemoryInfo()
   await fetchNetworkInfo()
-  await fetchServiceInfo()
+  if(settings.enable_services) await fetchServiceInfo()
   const intervalId = setInterval(fetchCpuTemp, 7000);
   onUnmounted(() => {
     clearInterval(intervalId);
@@ -234,10 +272,10 @@ onMounted(async () => {
       </div>
     </div>
 
-    <h1 class="text-4xl font-bold text-center mb-6">QEMU Virtual Machines</h1>
-    <div class="grid md:grid-cols-3 gap-6 w-full max-w-5xl mb-8">
+    <h1 v-if="settings.enable_qemu_controls" class="text-4xl font-bold text-center mb-6">QEMU Virtual Machines</h1>
+    <div v-if="settings.enable_qemu_controls" class="grid md:grid-cols-3 gap-6 w-full max-w-5xl mb-8">
       <div
-          v-for="vm in virtualMachines"
+          v-for="vm in vmInfo.vms"
           class="card bg-base-100 shadow-2xl p-6"
       >
         <h2 :class="vm.state === 'on' ? 'text-green-500' : 'text-red-500'" class="text-xl font-bold text-center">
