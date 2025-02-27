@@ -1,15 +1,16 @@
-import {execSync} from 'child_process';
 import {execa} from 'execa'
 import {settings} from "~/panel.config";
 import {vm_cache} from "~/core/globals";
 import Logger from "~/core/logger";
+import {reactive} from "vue";
+import type {VM} from "~/types/VM";
 
 export default defineEventHandler(async () => {
 
     if(vm_cache.vms.length > 0){
         Logger.info("VMs are cached, refreshing vm states...")
         for (const vm of vm_cache.vms) {
-            const stateValue = await getStateValue(vm.name)
+            const stateValue = await getStateValue(vm.name, true)
             vm.state = stateValue === "running" ? 'on' : 'off';
         }
     }else{
@@ -39,9 +40,21 @@ export default defineEventHandler(async () => {
 
 async function getVcpuCount(vmName: string): Promise<number | null> {
     try {
-        const { stdout } = await execa('virsh', ['dominfo', vmName], {
-            env: { LANG: 'C' }
-        });
+        const inCache = vm_single_caches.vms.some((vm) => vm.name === vmName);
+        let stdout: string;
+        if (!inCache) {
+            const result = await execa('virsh', ['dominfo', vmName], {
+                env: { LANG: 'C' }
+            });
+            stdout = result.stdout;
+            vm_single_caches.vms.push({
+                name: vmName,
+                information: stdout
+            })
+        } else {
+            console.log("loading info from cache for " + vmName)
+            stdout = vm_single_caches.vms.find(vm => vm.name === vmName)?.information || "";
+        }
         const vCpuCount = parseInt(stdout.split('\n').find(line => line.includes('CPU(s)'))?.split(':')[1]?.trim() || '');
         return isNaN(vCpuCount) ? null : vCpuCount;
     } catch (error) {
@@ -52,10 +65,21 @@ async function getVcpuCount(vmName: string): Promise<number | null> {
 
 async function getMaxMemory(vmName: string): Promise<number | null> {
     try {
-        const { stdout } = await execa('virsh', ['dominfo', vmName], {
-            env: { LANG: 'C' }
-        });
-        console.log(stdout)
+        const inCache = vm_single_caches.vms.some((vm) => vm.name === vmName);
+        let stdout: string;
+        if (!inCache) {
+            const result = await execa('virsh', ['dominfo', vmName], {
+                env: { LANG: 'C' }
+            });
+            stdout = result.stdout;
+            vm_single_caches.vms.push({
+                name: vmName,
+                information: stdout
+            })
+        } else {
+            console.log("loading info from cache for " + vmName)
+            stdout = vm_single_caches.vms.find(vm => vm.name === vmName)?.information || "";
+        }
         const maxMemoryLine = stdout.split('\n').find(line => line.includes('Max memory'));
         const maxMemory = maxMemoryLine ? parseInt(maxMemoryLine.split(':')[1].trim()) / 1024 : null;
         return isNaN(<number>maxMemory) ? null : maxMemory;
@@ -65,12 +89,23 @@ async function getMaxMemory(vmName: string): Promise<number | null> {
     }
 }
 
-
 async function getAutostartValue(vmName: string): Promise<string | null> {
     try {
-        const { stdout } = await execa('virsh', ['dominfo', vmName], {
-            env: { LANG: 'C' } // Set LANG to C to ensure consistent output formatting
-        });
+        const inCache = vm_single_caches.vms.some((vm) => vm.name === vmName);
+        let stdout: string;
+        if (!inCache) {
+            const result = await execa('virsh', ['dominfo', vmName], {
+                env: { LANG: 'C' }
+            });
+            stdout = result.stdout;
+            vm_single_caches.vms.push({
+                name: vmName,
+                information: stdout
+            })
+        } else {
+            console.log("loading info from cache for " + vmName)
+            stdout = vm_single_caches.vms.find(vm => vm.name === vmName)?.information || "";
+        }
 
         const autostartLine = stdout.split('\n').find(line => line.includes('Autostart'));
         return autostartLine ? autostartLine.split(':')[1].trim() : null;
@@ -80,17 +115,41 @@ async function getAutostartValue(vmName: string): Promise<string | null> {
     }
 }
 
-
-async function getStateValue(vmName: string): Promise<string | null> {
+async function getStateValue(vmName: string, forceRefresh: boolean = false): Promise<string | null> {
     try {
-        const { stdout } = await execa('virsh', ['dominfo', vmName], {
-            env: { LANG: 'C' }
-        });
+        let inCache = vm_single_caches.vms.some((vm) => vm.name === vmName);
+        if(forceRefresh)
+            inCache = false;
+        let stdout: string;
+        if (!inCache) {
+            const result = await execa('virsh', ['dominfo', vmName], {
+                env: { LANG: 'C' }
+            });
+            stdout = result.stdout;
+            vm_single_caches.vms.push({
+                name: vmName,
+                information: stdout
+            })
+        } else {
+            console.log("loading info from cache for " + vmName)
+            stdout = vm_single_caches.vms.find(vm => vm.name === vmName)?.information || "";
+        }
         const stateLine = stdout.split('\n').find(line => line.includes('State'));
-        const stateValue = stateLine ? stateLine.split(':')[1]?.trim() : null;
-        return stateValue;
+        return stateLine ? stateLine.split(':')[1]?.trim() : null;
     } catch (error) {
         console.error('Error getting state value:', error);
         return null;
     }
 }
+
+
+
+export interface vm_single_cache {
+    name: string;
+    information: string;
+}
+
+export const vm_single_caches = reactive({
+    vms: [] as vm_single_cache[],
+})
+
