@@ -8,8 +8,6 @@ import {checkAuth} from "~/util/auth";
 
 
 
-
-
 const startVm = async (vm: any) => {
   try {
     const response = await axios.post('/api/controlVM', {

@@ -22,7 +22,11 @@ export default defineEventHandler(async () => {
             const autostartValue = await getAutostartValue(vm.name);
             const autostart = autostartValue === "enable";
             const stateValue = await getStateValue(vm.name);
+
+
             const state: 'on' | 'off' = stateValue === "running" ? 'on' : 'off';
+
+
             vm_cache.vms.push({
                 name: vm.name,
                 os: vm.os,
