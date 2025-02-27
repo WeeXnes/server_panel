@@ -11,7 +11,6 @@ export default defineEventHandler(async () => {
 
         const interfaces: serviceInterface[] = [];
         if (Array.isArray(services)) {
-            console.log(`services is array`);
             services.forEach((interface_obj) => {
                 interfaces.push({
                     name: interface_obj.name,
