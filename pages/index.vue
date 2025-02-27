@@ -274,7 +274,7 @@ onMounted(async () => {
     </div>
 
     <h1 v-if="settings.enable_qemu_controls" class="text-4xl font-bold text-center mb-6">QEMU Virtual Machines</h1>
-    <div class="form-control flex flex-row gap-2 mb-6">
+    <div v-if="settings.enable_qemu_controls" class="form-control flex flex-row gap-2 mb-6">
       <label class="label cursor-pointer flex items-center gap-2">
         <span class="label-text">Force Shutdown</span>
         <input
