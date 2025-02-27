@@ -4,8 +4,6 @@ import {VM} from "~/types/VM";
 import {settings} from "~/panel.config";
 
 export default defineEventHandler(() => {
-
-
     let vmNames = ["Gameserver", "Ubuntu_VM1"]
     const virtualMachines: VM[] = [];
     settings.qemu_vms.forEach(vm => {

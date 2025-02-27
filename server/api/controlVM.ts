@@ -1,4 +1,5 @@
 import { exec } from 'child_process';
+import Logger from "~/core/logger";
 
 export default defineEventHandler(async (event) => {
     const body = await readBody(event);
@@ -12,13 +13,14 @@ export default defineEventHandler(async (event) => {
 
         await new Promise((resolve, reject) => {
             exec(command, (error, stdout, stderr) => {
-                if (error || stderr) {
-                    reject(`Error: ${stderr || error?.message}`);
+                if (error || stderr) {;
+                    Logger.error(`Error: ${stderr || error?.message}`);
+                    reject(`Error: ${stderr || error?.message}`)
                 }
                 resolve(stdout);
             });
         });
-
+        Logger.info(action + ": " + vm.name);
         return { status: 'success', message: `VM ${action} successful`, vm };
     } catch (error) {
         return { status: 'error', message: `Failed to ${action} VM`, error: error };

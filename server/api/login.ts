@@ -3,21 +3,20 @@ import { sendError, createError } from 'h3';
 import jwt from 'jsonwebtoken';
 import {settings} from "~/panel.config";
 import {jwt_globals} from "~/core/globals";
+import Logger from "~/core/logger";
 
 export default defineEventHandler(async (event) => {
     try {
         const { password } = await readBody(event);
 
         if (!password) {
-            console.log("password is required");
+            Logger.error("password is required");
             return sendError(event, createError({ statusCode: 400, message: 'password is required' }));
         }
 
-
-
         const isMatch = await bcrypt.compare(password, settings.password.hash);
         if (!isMatch) {
-            console.log("Invalid credentials! password");
+            Logger.error("Invalid credentials! password");
             return sendError(event, createError({ statusCode: 400, message: 'Invalid credentials!' }));
         }
 

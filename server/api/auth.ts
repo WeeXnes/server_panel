@@ -1,11 +1,12 @@
 import { defineEventHandler, getCookie, createError } from 'h3';
 import jwt from 'jsonwebtoken';
 import {jwt_globals} from "~/core/globals";
+import Logger from "~/core/logger";
 
 export default defineEventHandler(async (event) => {
     try {
         const token = getCookie(event, 'token');
-        console.log("Checking token " + token);
+        Logger.info("Checking token " + token);
         if (!token) {
             throw createError({ statusCode: 401, statusMessage: 'Unauthorized' });
         }
@@ -19,7 +20,7 @@ export default defineEventHandler(async (event) => {
         if (!decoded?.userId) {
             throw createError({ statusCode: 401, statusMessage: 'Invalid token' });
         }
-        console.log("user has been authed, hash: " + decoded.userId);
+        Logger.success("user has been authed, password: " + decoded.userId);
         return { success: true };
     } catch (error: any) {
         return createError({
