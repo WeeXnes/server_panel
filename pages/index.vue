@@ -33,6 +33,7 @@ const shutdownVm = async (vm: any) => {
   try {
     const response = await axios.post('/api/controlVM', {
       action: 'shutdown',
+      force: settings.force_shutdown,
       vm: vm
     });
     console.log(response.data);
@@ -53,6 +54,7 @@ const settings = reactive({
   ignoreCache: false,
   enable_services: false,
   enable_qemu_controls: false,
+  force_shutdown: false
 });
 
 const vmInfo = reactive({
@@ -274,6 +276,16 @@ onMounted(async () => {
     </div>
 
     <h1 v-if="settings.enable_qemu_controls" class="text-4xl font-bold text-center mb-6">QEMU Virtual Machines</h1>
+    <div class="form-control flex flex-row gap-2 mb-6">
+      <label class="label cursor-pointer flex items-center gap-2">
+        <span class="label-text">Force Shutdown</span>
+        <input
+            type="checkbox"
+            class="checkbox checkbox-primary"
+            v-model="settings.force_shutdown"
+        />
+      </label>
+    </div>
     <div v-if="settings.enable_qemu_controls" class="grid md:grid-cols-3 gap-6 w-full max-w-5xl mb-8">
       <div
           v-for="vm in vmInfo.vms"
@@ -288,12 +300,19 @@ onMounted(async () => {
           <p><strong>Max Memory:</strong> {{ vm.maxMemory }} MB</p>
           <p><strong>Autostart:</strong> {{ vm.autostart ? 'Enabled' : 'Disabled' }}</p>
         </div>
+
         <div class="form-control mt-4 flex flex-row gap-2">
           <button @click="startVm(vm)" class="btn btn-primary w-1/2">Start</button>
-          <button @click="shutdownVm(vm)" class="btn btn-error w-1/2">Shutdown</button>
+          <button
+              @click="shutdownVm(vm)"
+              :class="settings.force_shutdown ? 'btn btn-error w-1/2' : 'btn btn-warning w-1/2'"
+              class="w-1/2">
+            {{ settings.force_shutdown ? 'Kill' : 'Shutdown' }}
+          </button>
         </div>
       </div>
     </div>
+
 
     <h1 v-if="serviceInfo.isLoaded" class="text-4xl font-bold text-center mb-6">Services</h1>
     <div v-if="serviceInfo.isLoaded" class="grid md:grid-cols-3 gap-6 w-full max-w-5xl">
@@ -306,10 +325,6 @@ onMounted(async () => {
         <div class="mt-2 text-sm">
           <p><strong>Name:</strong> {{ service.name }}</p>
           <p><strong>State:</strong> {{ service.state ? "Running" : "Not Running" }}</p>
-        </div>
-        <div class="form-control mt-4 flex flex-row gap-2">
-          <button class="btn btn-primary w-1/2">Start</button>
-          <button class="btn btn-error w-1/2">Stop</button>
         </div>
       </div>
     </div>
