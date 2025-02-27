@@ -4,19 +4,6 @@
       <h2 class="text-2xl font-bold text-center">Login</h2>
 
       <form @submit.prevent="handleLogin" class="mt-4">
-        <div class="form-control">
-          <label class="label">
-            <span class="label-text">E-Mail</span>
-          </label>
-          <input
-              v-model="email"
-              type="email"
-              placeholder="Enter your email"
-              class="input input-bordered"
-              required
-          />
-        </div>
-
         <div class="form-control mt-2">
           <label class="label">
             <span class="label-text">Password</span>
@@ -34,10 +21,6 @@
           <button type="submit" class="btn btn-primary w-full">Login</button>
         </div>
       </form>
-
-      <div class="mt-4 text-center text-sm">
-        <p>Don't have an account? <a href="/register" class="text-blue-500 hover:underline">Register here</a></p>
-      </div>
     </div>
   </div>
 </template>
@@ -57,7 +40,24 @@ export default {
   },
   methods: {
     async handleLogin() {
+      try {
+        const response = await axios.post('/api/login', {
+          password: this.password,
+        });
+        console.log(response.data);
 
+        if (response?.data?.message == 'Login successful!') {
+          const token = response.data.token;
+          const cookie = useCookie('token');
+          cookie.value = token;
+
+          this.$router.push('/');
+        } else {
+          console.error('Login failed');
+        }
+      } catch (error) {
+        console.error('Login error:', error);
+      }
     }
   }
 };

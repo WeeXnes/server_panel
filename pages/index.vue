@@ -4,10 +4,10 @@ import { reactive, ref } from 'vue';
 import axios from 'axios';
 import type {networkInterface} from "~/types/networkInterface";
 import type {serviceInterface} from "~/types/serviceInterface";
+import {checkAuth} from "~/util/auth";
 
 
 
-const ignoreCache = true;
 
 
 const startVm = async (vm: any) => {
@@ -195,20 +195,21 @@ const fetchSettings = async () => {
 }
 
 onMounted(async () => {
-  await fetchSettings()
-
-  if(settings.enable_qemu_controls) await fetchVMs()
-
-  await fetchOsInfo()
-  await fetchCpuTemp()
-  cpuInfo.isLoaded = true
-  await fetchMemoryInfo()
-  await fetchNetworkInfo()
-  if(settings.enable_services) await fetchServiceInfo()
-  const intervalId = setInterval(fetchCpuTemp, 7000);
-  onUnmounted(() => {
-    clearInterval(intervalId);
-  });
+  let isAuthed = await checkAuth(useRouter())
+  if(isAuthed){
+    await fetchSettings()
+    if(settings.enable_qemu_controls) await fetchVMs()
+    await fetchOsInfo()
+    await fetchCpuTemp()
+    cpuInfo.isLoaded = true
+    await fetchMemoryInfo()
+    await fetchNetworkInfo()
+    if(settings.enable_services) await fetchServiceInfo()
+    const intervalId = setInterval(fetchCpuTemp, 7000);
+    onUnmounted(() => {
+      clearInterval(intervalId);
+    });
+  }
 })
 
 

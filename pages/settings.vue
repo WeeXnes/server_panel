@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import type { VM } from '../types/VM';
-import axios from 'axios';
+import {checkAuth} from "~/util/auth";
 
-
-
+onMounted(async () => {
+  let isAuthed = await checkAuth(useRouter())
+})
 
 </script>
 

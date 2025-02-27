@@ -45,10 +45,6 @@ export default defineEventHandler(async () => {
                 state: network.operstate as "up" | "down" | "unknown"
             })
         }
-
-        interfaces.forEach(obj => {
-            console.log(obj.name + " is " + obj.state);
-        })
         return interfaces;
 
     } catch (error) {
