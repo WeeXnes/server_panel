@@ -1,11 +1,14 @@
 import { exec } from 'child_process';
 import Logger from "~/core/logger";
+import {checkValidJwtToken} from "~/core/command_auth";
 
 export default defineEventHandler(async (event) => {
     const body = await readBody(event);
-    const { action, force, vm } = body;
+    const { action, token, force, vm } = body;
 
     try {
+
+        checkValidJwtToken(token)
 
         const command = action === 'start' ? `virsh start ${vm.name}` : (force ? `virsh destroy ${vm.name}` : `virsh shutdown ${vm.name}`);
 

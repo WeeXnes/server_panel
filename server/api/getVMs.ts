@@ -4,41 +4,53 @@ import {vm_cache} from "~/core/globals";
 import Logger from "~/core/logger";
 import {reactive} from "vue";
 import type {VM} from "~/types/VM";
+import {checkValidJwtToken} from "~/core/command_auth";
+import si from "systeminformation";
+import { defineEventHandler, getCookie, createError } from 'h3';
+export default defineEventHandler(async (event) => {
 
-export default defineEventHandler(async () => {
 
-    if(vm_cache.vms.length > 0){
-        Logger.info("VMs are cached, refreshing vm states...")
-        for (const vm of vm_cache.vms) {
-            const stateValue = await getStateValue(vm.name, true)
-            vm.state = stateValue === "running" ? 'on' : 'off';
+
+    try {
+        const body = await readBody(event);
+        const { token } = body;
+        checkValidJwtToken(token)
+        if(vm_cache.vms.length > 0){
+            Logger.info("VMs are cached, refreshing vm states...")
+            for (const vm of vm_cache.vms) {
+                const stateValue = await getStateValue(vm.name, true)
+                vm.state = stateValue === "running" ? 'on' : 'off';
+            }
+        }else{
+            Logger.info("VMs havent been Loaded yet, loading now...")
+            for (const vm of settings.qemu_vms) {
+                Logger.info("Loading " + vm.name)
+                const vCpuCount = await getVcpuCount(vm.name);
+                const maxMemory = await getMaxMemory(vm.name);
+                const autostartValue = await getAutostartValue(vm.name);
+                const autostart = autostartValue === "enable";
+                const stateValue = await getStateValue(vm.name);
+
+
+                const state: 'on' | 'off' = stateValue === "running" ? 'on' : 'off';
+
+
+                vm_cache.vms.push({
+                    name: vm.name,
+                    os: vm.os,
+                    vCpuCount: vCpuCount || 0,
+                    maxMemory: maxMemory || 0,
+                    autostart: autostart,
+                    state: state
+                });
+            }
         }
-    }else{
-        Logger.info("VMs havent been Loaded yet, loading now...")
-        for (const vm of settings.qemu_vms) {
-            Logger.info("Loading " + vm.name)
-            const vCpuCount = await getVcpuCount(vm.name);
-            const maxMemory = await getMaxMemory(vm.name);
-            const autostartValue = await getAutostartValue(vm.name);
-            const autostart = autostartValue === "enable";
-            const stateValue = await getStateValue(vm.name);
-
-
-            const state: 'on' | 'off' = stateValue === "running" ? 'on' : 'off';
-
-
-            vm_cache.vms.push({
-                name: vm.name,
-                os: vm.os,
-                vCpuCount: vCpuCount || 0,
-                maxMemory: maxMemory || 0,
-                autostart: autostart,
-                state: state
-            });
-        }
+        return vm_cache.vms;
+    } catch (error) {
+        console.error('Error fetching VM info:', error);
     }
 
-    return vm_cache.vms;
+
 });
 
 

@@ -12,6 +12,7 @@ const startVm = async (vm: any) => {
   try {
     const response = await axios.post('/api/controlVM', {
       action: 'start',
+      token: useCookie('token').value,
       vm: vm
     });
     console.log(response.data);
@@ -32,6 +33,7 @@ const shutdownVm = async (vm: any) => {
     const response = await axios.post('/api/controlVM', {
       action: 'shutdown',
       force: settings.force_shutdown,
+      token: useCookie('token').value,
       vm: vm
     });
     console.log(response.data);
@@ -98,8 +100,12 @@ const networkInfo = reactive({
 
 const fetchServiceInfo = async () => {
   try{
-    let services = await $fetch('/api/getServices')
-    services?.forEach((interface_obj) => {
+    //let services = await $fetch('/api/getServices')
+    const response = await axios.post('/api/getServices', {
+      token: useCookie('token').value
+    });
+    let services = response.data;
+    services?.forEach((interface_obj: serviceInterface) => {
       serviceInfo.services.push(interface_obj)
     });
     serviceInfo.isLoaded = true;
@@ -110,8 +116,12 @@ const fetchServiceInfo = async () => {
 
 const fetchNetworkInfo = async () => {
   try{
-    let networkInfoFetch = await $fetch('/api/getNetworkInterfaces')
-    networkInfoFetch?.forEach((interface_obj) => {
+    const response = await axios.post('/api/getNetworkInterfaces', {
+      token: useCookie('token').value
+    });
+    let networkInfoFetch = response.data;
+
+    networkInfoFetch?.forEach((interface_obj: networkInterface) => {
       networkInfo.interfacesList.push(interface_obj)
     });
 
@@ -123,7 +133,11 @@ const fetchNetworkInfo = async () => {
 
 const fetchOsInfo = async () => {
   try{
-    let systemInfoFetch = await $fetch('/api/getSystem')
+    const response = await axios.post('/api/getSystem', {
+      token: useCookie('token').value
+    });
+    let systemInfoFetch = response.data;
+
     console.log(systemInfoFetch)
     osInfo.name = systemInfoFetch?.platform || 'N/A'
     osInfo.version = systemInfoFetch?.distro || 'N/A'
@@ -137,7 +151,10 @@ const fetchOsInfo = async () => {
 
 const fetchCpuTemp = async () => {
   try {
-    let cpuInfoFetch = await $fetch('/api/getCpu')
+    const response = await axios.post('/api/getCpu', {
+      token: useCookie('token').value
+    });
+    let cpuInfoFetch = response.data;
     console.log(cpuInfoFetch)
     cpuInfo.manufacturer = cpuInfoFetch?.info.manufacturer || 'N/A'
     cpuInfo.model = cpuInfoFetch?.info.brand || 'N/A'
@@ -152,7 +169,10 @@ const fetchCpuTemp = async () => {
 
 const fetchMemoryInfo = async () => {
   try{
-    let memoryInfoFetch = await $fetch('/api/getMemory')
+    const response = await axios.post('/api/getMemory', {
+      token: useCookie('token').value
+    });
+    let memoryInfoFetch = response.data;
     console.log(memoryInfoFetch)
     let ram_cache = settings.ignoreCache ? (memoryInfoFetch?.cached ?? 0) : 0;
     if(memoryInfoFetch?.total != null)
@@ -169,9 +189,12 @@ const fetchMemoryInfo = async () => {
 
 const fetchVMs = async () => {
   try{
-    let vmInfoFetch = await $fetch('/api/getVMs')
+    const response = await axios.post('/api/getVMs', {
+      token: useCookie('token').value
+    });
+    let vmInfoFetch = response.data;
     console.log(vmInfoFetch)
-    vmInfoFetch?.forEach(vm => {
+    vmInfoFetch?.forEach((vm: VM) => {
       vmInfo.vms.push(vm)
     })
     vmInfo.isLoaded = true
@@ -184,7 +207,10 @@ const fetchVMs = async () => {
 
 const fetchSettings = async () => {
   try {
-    let settingsFetch = await $fetch('/api/getSettings')
+    const response = await axios.post('/api/getSettings', {
+      token: useCookie('token').value
+    });
+    let settingsFetch = response.data;
     console.log(settingsFetch)
     settings.ignoreCache = settingsFetch?.ignoreCache || false
     settings.enable_qemu_controls = settingsFetch?.enable_qemu_controls || false

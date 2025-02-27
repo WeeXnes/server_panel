@@ -1,7 +1,13 @@
+import { defineEventHandler, getCookie, createError } from 'h3';
 import si from 'systeminformation';
+import {checkValidJwtToken} from "~/core/command_auth";
 
-export default defineEventHandler(async () => {
+export default defineEventHandler(async (event) => {
     try {
+        const body = await readBody(event);
+        const { token } = body;
+        checkValidJwtToken(token)
+
         const cpuData = await si.cpu();
         const cpuTemp = await si.cpuTemperature();
 

@@ -3,9 +3,15 @@ import si from 'systeminformation';
 import {VM} from "~/types/VM";
 import {networkInterface} from "~/types/networkInterface";
 import {settings} from "~/panel.config";
-
-export default defineEventHandler(async () => {
+import {checkValidJwtToken} from "~/core/command_auth";
+import { defineEventHandler, getCookie, createError } from 'h3';
+export default defineEventHandler(async (event) => {
     try {
+
+        const body = await readBody(event);
+        const { token } = body;
+        checkValidJwtToken(token)
+
         const network = await si.networkInterfaces();
         const interfaces_to_scan = settings.interfaces_to_scan || [];
 
