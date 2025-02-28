@@ -24,5 +24,5 @@ export const settings = reactive({
         "libvirt",
         "frp"
     ],
-    password_hash: "$2b$10$cdGQ1EqJxtTFe.E9ifZ.0O2inml3sEcLaWFyK9EdmCelmZ2l2Ez8e"
+    password_hash: ""
 });
