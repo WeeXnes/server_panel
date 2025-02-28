@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
             return sendError(event, createError({ statusCode: 400, message: 'password is required' }));
         }
 
-        const isMatch = await bcrypt.compare(password, settings.password.hash);
+        const isMatch = await bcrypt.compare(password, settings.password_hash);
         if (!isMatch) {
             Logger.error("Invalid credentials! password");
             return sendError(event, createError({ statusCode: 400, message: 'Invalid credentials!' }));
