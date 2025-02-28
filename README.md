@@ -20,17 +20,20 @@ Server Control Panel is a web-based interface for monitoring and managing QEMU v
 
 ## Technologies Used
 
-- **Nuxt.js** - Vue.js-based framework for SSR and static site generation
-- **DaisyUI** - Tailwind CSS component library for styling
-- **systeminformation** - Node.js library for retrieving system and hardware details
+- **[Nuxt.js](https://nuxt.com/)** - Vue.js-based framework for SSR and static site generation
+- **[DaisyUI](https://daisyui.com/)** - Tailwind CSS component library for styling
+- **[systeminformation](https://www.npmjs.com/package/systeminformation)** - Node.js library for retrieving system and hardware details
+
+
 
 ## Installation
 
 ### Prerequisites
 
-- Node.js (v16+ recommended)
-- NPM or Yarn
-- QEMU installed on the host system
+- [Node.js](https://nodejs.org/) (v16+ recommended)
+- [NPM](https://www.npmjs.com/)
+- [QEMU](https://documentation.ubuntu.com/server/how-to/virtualisation/virtual-machine-manager/index.html) (can be disabled tho)
+- [PM2](https://pm2.keymetrics.io/)
 
 ### Steps
 
@@ -43,11 +46,18 @@ Server Control Panel is a web-based interface for monitoring and managing QEMU v
    ```sh
    npm install
    ```
-3. Start the development server:
+3. Set the admin password:
    ```sh
-   npm run dev
+   npm run password_gen <password>
    ```
-4. Open the panel in your browser at `http://localhost:3000`
+4. Build the Panel
+   ```sh
+   npm run build
+   ```
+5. Start the Server
+   ```sh
+   pm2 start
+   ```
 
 ## Configuration
 
@@ -84,7 +94,9 @@ export const settings = reactive({
     systemctl_services:[
         "libvirt",
         "frp"
-    ]
+    ],
+    // set the password hash by running "npm run password_gen <password>" before building
+    password_hash: ""
 });
 ```
 
