@@ -220,6 +220,8 @@ const fetchSettings = async () => {
   }
 }
 
+let intervalId: NodeJS.Timeout;
+
 onMounted(async () => {
   let isAuthed = await checkAuth(useRouter())
   if(isAuthed){
@@ -231,11 +233,15 @@ onMounted(async () => {
     await fetchMemoryInfo()
     await fetchNetworkInfo()
     if(settings.enable_services) await fetchServiceInfo()
-    const intervalId = setInterval(fetchCpuTemp, 7000);
-    onUnmounted(() => {
-      clearInterval(intervalId);
-    });
+    intervalId = setInterval(fetchCpuTemp, 7000);
+
   }
+})
+
+
+
+onBeforeUnmount(()=>{
+  clearInterval(intervalId);
 })
 
 
