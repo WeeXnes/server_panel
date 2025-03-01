@@ -107,6 +107,23 @@ export const settings = reactive({
 - You can start or shut down virtual machines.
 - Service monitoring
 
+## Optional (Recommended)
+
+### Running the Website with SSL
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## Author
 
